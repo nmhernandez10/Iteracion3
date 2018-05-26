@@ -17,8 +17,12 @@ import javax.ws.rs.core.Response;
 
 import tm.AlohAndesTransactionManager;
 import vos.Espacio;
+import vos.ListaComparacion;
 import vos.ListaEspacios;
+import vos.ListaRFC10;
+import vos.ListaRFC12;
 import vos.ListaRFC5;
+import vos.RFC10;
 import vos.RFC6;
 import vos.RFC7;
 
@@ -47,7 +51,7 @@ public class GeneralService {
 		try {
 			ListaRFC5 espacios = new ListaRFC5(tm.usosPorCategoria());
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(espacios).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
@@ -68,7 +72,7 @@ public class GeneralService {
 			long id = Long.parseLong(idS);
 			RFC6 usuario = tm.usoPorUsuario(id, tipo);
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(usuario).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
@@ -88,12 +92,91 @@ public class GeneralService {
 		{
 			List<String> resultados = tm.analizarOperacion(rfc7);
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(resultados).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
 		}
 		
+	}
+	
+	//RFC10
+	@POST
+	@Path("/consultarConsumoV1")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response consultarConsumoV1(ListaRFC10 rfc10) throws Exception {
+		long tiempo = System.currentTimeMillis();
+		AlohAndesTransactionManager tm = new AlohAndesTransactionManager(getPath());
+
+		try 
+		{
+			ListaRFC10 resultados = tm.consultarConsumo(rfc10, 10);
+			tiempo = System.currentTimeMillis() - tiempo;
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
+			return Response.status(200).entity(resultados).build();
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}		
+	}
+	
+	//RFC11
+	@POST
+	@Path("/consultarConsumoV2")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response consultarConsumoV2(ListaRFC10 rfc10) throws Exception {
+		long tiempo = System.currentTimeMillis();
+		AlohAndesTransactionManager tm = new AlohAndesTransactionManager(getPath());
+
+		try 
+		{
+			ListaRFC10 resultados = tm.consultarConsumo(rfc10, 11);
+			tiempo = System.currentTimeMillis() - tiempo;
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
+			return Response.status(200).entity(resultados).build();
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}		
+	}	
+	
+	//RFC12
+	@POST
+	@Path("/consultarFuncionamiento")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response consultarFuncionamiento(ListaRFC12 listaRFC12) throws Exception {
+		long tiempo = System.currentTimeMillis();
+		AlohAndesTransactionManager tm = new AlohAndesTransactionManager(getPath());
+
+		try 
+		{
+			ListaRFC12 resultados = tm.consultarFuncionamiento(listaRFC12);
+			tiempo = System.currentTimeMillis() - tiempo;
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
+				return Response.status(200).entity(resultados).build();
+			} catch (Exception e) {
+				return Response.status(500).entity(doErrorMessage(e)).build();
+		}		
+	}
+		
+	//Comparación		
+	@GET
+	@Path("/comparacion")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response comparacion() throws Exception {
+		long tiempo = System.currentTimeMillis();
+		AlohAndesTransactionManager tm = new AlohAndesTransactionManager(getPath());
+
+		try 
+		{
+			ListaComparacion resultados = tm.comparacion();
+			tiempo = System.currentTimeMillis() - tiempo;
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
+				return Response.status(200).entity(resultados).build();
+			} catch (Exception e) {
+				return Response.status(500).entity(doErrorMessage(e)).build();
+		}		
 	}
 	
 }

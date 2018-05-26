@@ -49,7 +49,7 @@ public class ReservaService {
 			System.out.println(reserva.getFechaReserva());
 			tm.addReserva(reserva, false);	
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(reserva).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
@@ -70,7 +70,7 @@ public class ReservaService {
 		try {
 			reserva = tm.cancelarReserva(reserva, false, false);
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(reserva).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
@@ -91,7 +91,7 @@ public class ReservaService {
 		try {
 			ListaReservas reservas = new ListaReservas(tm.reservaColectiva(rf7));
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(reservas).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
@@ -112,7 +112,7 @@ public class ReservaService {
 			List<String> resultado = new ArrayList<String>();
 			resultado.add(tm.cancelarReservaColectiva(id));
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(resultado).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();

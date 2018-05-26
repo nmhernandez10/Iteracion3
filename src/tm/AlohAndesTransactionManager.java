@@ -26,8 +26,13 @@ import vos.CategoriaHabitacion;
 import vos.CategoriaOperador;
 import vos.CategoriaServicio;
 import vos.Cliente;
+import vos.Comparacion;
 import vos.Espacio;
 import vos.Habitacion;
+import vos.ListaComparacion;
+import vos.ListaRFC10;
+import vos.ListaRFC12;
+import vos.ListaRFC13;
 import vos.ListaRFC8;
 import vos.ListaRFC9;
 import vos.ListaReservas;
@@ -40,6 +45,9 @@ import vos.RF3;
 import vos.RF7;
 import vos.RF9;
 import vos.RFC1;
+import vos.RFC10;
+import vos.RFC12;
+import vos.RFC13;
 import vos.RFC3;
 import vos.RFC4;
 import vos.RFC5;
@@ -1532,6 +1540,175 @@ public class AlohAndesTransactionManager
 		} finally {
 			try {
 				daoEspacio.cerrarRecursos();
+				daoReserva.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw new Exception (exception.getMessage() + ". " + msgError);
+			}
+		}
+	}
+	
+	// RFC10 y RFC11
+	
+	public ListaRFC10 consultarConsumo(ListaRFC10 listaRFC10, int requerimiento) throws Exception 
+	{
+		DAOCliente daoCliente = new DAOCliente();
+		
+		String msgError = "";
+		
+		try {
+			this.conn = darConexion();			
+			daoCliente.setConn(conn);
+			
+			List<RFC10> resultado = daoCliente.consultarConsumo(listaRFC10, requerimiento);
+			
+			listaRFC10.setElementos(resultado);
+			
+			return listaRFC10;
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} finally {
+			try {
+				daoCliente.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw new Exception (exception.getMessage() + ". " + msgError);
+			}
+		}
+	}
+	
+	// RFC12
+	
+	public ListaRFC12 consultarFuncionamiento(ListaRFC12 listaRFC12) throws Exception 
+	{
+		DAOOperador daoOperador = new DAOOperador();
+		
+		String msgError = "";
+		
+		try {
+			this.conn = darConexion();			
+			daoOperador.setConn(conn);
+			
+			List<RFC12> resultado = daoOperador.consultarFuncionamiento(listaRFC12);
+			
+			listaRFC12.setElementos(resultado);
+			
+			return listaRFC12;
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} finally {
+			try {
+				daoOperador.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw new Exception (exception.getMessage() + ". " + msgError);
+			}
+		}
+	}
+	
+	// RFC13
+	
+	public ListaRFC13 obtenerClientesBuenos() throws Exception 
+	{
+		DAOCliente daoCliente = new DAOCliente();
+		
+		String msgError = "";
+		
+		try {
+			this.conn = darConexion();			
+			daoCliente.setConn(conn);
+			
+			List<RFC13> resultado = daoCliente.obtenerBuenosClientes();
+			
+			return new ListaRFC13(resultado);
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} finally {
+			try {
+				daoCliente.cerrarRecursos();
+				if (this.conn != null)
+					this.conn.close();
+			} catch (SQLException exception) {
+				System.err.println("SQLException closing resources:" + exception.getMessage());
+				exception.printStackTrace();
+				throw new Exception (exception.getMessage() + ". " + msgError);
+			}
+		}
+	}
+	
+	// Comparación
+	
+	public ListaComparacion comparacion() throws Exception 
+	{
+		DAOCliente daoCliente = new DAOCliente();
+		DAOReserva daoReserva = new DAOReserva();
+		
+		String msgError = "";
+		
+		try {
+			this.conn = darConexion();			
+			daoCliente.setConn(conn);
+			daoReserva.setConn(conn);
+			
+			List<Cliente> clientes = daoCliente.darClientes();
+			List<Reserva> reservas = daoReserva.darReservas();
+			
+			List<Comparacion> resultado = new ArrayList<Comparacion>();
+			
+			for(Cliente cliente : clientes)
+			{
+				long numReservas = 0;
+				
+				for(Reserva reserva :reservas)
+				{
+					if(reserva.getIdCliente() == cliente.getId())
+					{
+						numReservas++;
+					}
+				}
+				
+				resultado.add(new Comparacion(cliente.getId(), numReservas));
+			}
+			
+			return new ListaComparacion(resultado);
+		} catch (SQLException e) {
+			System.err.println("SQLException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} catch (Exception e) {
+			System.err.println("GeneralException:" + e.getMessage());
+			e.printStackTrace();
+			throw new Exception (e.getMessage() + ". " + msgError);
+		} finally {
+			try {
+				daoCliente.cerrarRecursos();
 				daoReserva.cerrarRecursos();
 				if (this.conn != null)
 					this.conn.close();

@@ -47,7 +47,7 @@ public class OperadorService {
 			
 			Operador operador = tm.addOperador(rf1);
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(operador).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
@@ -65,7 +65,7 @@ public class OperadorService {
 		try {
 			ListaRFC1 ingresos = new ListaRFC1(tm.ingresosOperadores());
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(ingresos).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
@@ -84,7 +84,7 @@ public class OperadorService {
 		try {
 			ListaRFC3 ocupaciones = new ListaRFC3(tm.ocupacionOperadores());
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(ocupaciones).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();

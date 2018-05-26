@@ -3,6 +3,7 @@ package rest;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -13,6 +14,7 @@ import javax.ws.rs.core.Response;
 import tm.AlohAndesTransactionManager;
 import vos.Cliente;
 import vos.Espacio;
+import vos.ListaRFC13;
 import vos.RF3;
 
 @Path("clientes")
@@ -42,11 +44,30 @@ public class ClienteService {
 			
 			Cliente cliente = tm.addCliente(rf3);
 			tiempo = System.currentTimeMillis() - tiempo;
-			System.out.println("Esta transacción/consulta duró " + tiempo + " milisegundos");
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
 			return Response.status(200).entity(cliente).build();
 		} catch (Exception e) {
 			return Response.status(500).entity(doErrorMessage(e)).build();
 		}
 	}
 	
+	//RFC13
+	
+	@GET
+	@Path("/buenosClientes")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response deleteEspacio() {
+		long tiempo = System.currentTimeMillis();
+		AlohAndesTransactionManager tm = new AlohAndesTransactionManager(getPath());
+
+		try {
+			
+			ListaRFC13 clientes = tm.obtenerClientesBuenos();
+			tiempo = System.currentTimeMillis() - tiempo;
+			System.out.println("Esta transacción duró " + tiempo + " milisegundos");
+			return Response.status(200).entity(clientes).build();
+		} catch (Exception e) {
+			return Response.status(500).entity(doErrorMessage(e)).build();
+		}
+	}
 }
