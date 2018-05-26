@@ -10,8 +10,12 @@ import java.util.List;
 import vos.CategoriaServicio;
 import vos.Cliente;
 import vos.Espacio;
+import vos.ListaRFC10;
+import vos.RFC10;
+import vos.RFC13;
 import vos.RFC5;
 import vos.RFC6;
+import vos.RFC8;
 import vos.Reserva;
 import vos.Vinculo;
 
@@ -282,8 +286,208 @@ public class DAOCliente {
 			prepStmtC.close();
 			
 			return resultante;
-		}		
+		}				
 		
+	}
+	
+	//RFC10 y RFC11
+	
+	public List<RFC10> consultarConsumo(ListaRFC10 listaRFC10, int requerimiento) throws SQLException, Exception
+	{			
+		List<RFC10> resultado = new ArrayList<RFC10>();	
 		
+		String sql = 	"SELECT * "+
+						"FROM CLIENTES,  (SELECT CLIENTES.ID, SUM(RESERVAS.PRECIO) AS GASTOS, COUNT(RESERVAS.ID) AS RESERVAS, "+
+			                    "AVG(RESERVAS.DURACION) AS DURACIONPROMEDIO, AVG(ESPACIOS.TAMAÑO) AS TAMAÑOPROMEDIO, "+
+			                    "STATS_MODE(OPERADORES.IDCATEGORIA) OPERADORFRECUENTE, "+
+			                    "STATS_MODE(HABITACIONES.IDCATEGORIA) HABITACIONFRECUENTE, "+
+			                    "STATS_MODE(SERVICIOS.IDCATEGORIA) AS SERVICIOFRECUENTE "+
+			                "FROM CLIENTES, RESERVAS, ESPACIOS, SERVICIOS, HABITACIONES, OPERADORES "+
+			                "WHERE CLIENTES.ID IN    (SELECT DISTINCT CLIENTES.ID "+
+			                                        "FROM CLIENTES, RESERVAS "+
+			                                        "WHERE CLIENTES.ID = RESERVAS.IDCLIENTE "+ 
+			                                            "AND RESERVAS.IDESPACIO = "+ listaRFC10.getIdEspacio() + " "+
+			                                            "AND RESERVAS.FECHARESERVA <= TO_DATE('"+ listaRFC10.getFechaExterior() + "','DD-MM-YYYY') "+ 
+			                                            "AND RESERVAS.FECHARESERVA >= TO_DATE('"+ listaRFC10.getFechaInferior() + "','DD-MM-YYYY')) "+
+			                    "AND RESERVAS.IDCLIENTE = CLIENTES.ID AND RESERVAS.IDESPACIO = ESPACIOS.ID  "+ 
+			                    "AND ESPACIOS.ID = SERVICIOS.IDESPACIO AND ESPACIOS.ID = HABITACIONES.IDESPACIO "+ 
+			                    "AND OPERADORES.ID = ESPACIOS.IDOPERADOR "+
+			                "GROUP BY CLIENTES.ID) DATOSAGRUPADOS "+
+						"WHERE CLIENTES.ID = DATOSAGRUPADOS.ID "+
+						"ORDER BY "+ listaRFC10.getOrdenamiento();	
+		
+		if(listaRFC10.getIdOperador() != 0)
+		{
+			sql = 	"SELECT * "+
+					"FROM CLIENTES,  (SELECT CLIENTES.ID, SUM(RESERVAS.PRECIO) AS GASTOS, COUNT(RESERVAS.ID) AS RESERVAS, "+
+		                    "AVG(RESERVAS.DURACION) AS DURACIONPROMEDIO, AVG(ESPACIOS.TAMAÑO) AS TAMAÑOPROMEDIO, "+
+		                    "STATS_MODE(OPERADORES.IDCATEGORIA) OPERADORFRECUENTE, "+
+		                    "STATS_MODE(HABITACIONES.IDCATEGORIA) HABITACIONFRECUENTE, "+
+		                    "STATS_MODE(SERVICIOS.IDCATEGORIA) AS SERVICIOFRECUENTE "+
+		                "FROM CLIENTES, RESERVAS, ESPACIOS, SERVICIOS, HABITACIONES, OPERADORES "+
+		                "WHERE CLIENTES.ID IN    (SELECT DISTINCT CLIENTES.ID "+
+		                                        "FROM CLIENTES, RESERVAS "+
+		                                        "WHERE CLIENTES.ID = RESERVAS.IDCLIENTE "+ 
+		                                            "AND RESERVAS.IDESPACIO = "+ listaRFC10.getIdEspacio() + " "+
+		                                            "AND RESERVAS.FECHARESERVA <= TO_DATE('"+ listaRFC10.getFechaExterior() + "','DD-MM-YYYY') "+ 
+		                                            "AND RESERVAS.FECHARESERVA >= TO_DATE('"+ listaRFC10.getFechaInferior() + "','DD-MM-YYYY')) "+
+		                    "AND RESERVAS.IDCLIENTE = CLIENTES.ID AND RESERVAS.IDESPACIO = ESPACIOS.ID  "+ 
+		                    "AND ESPACIOS.ID = SERVICIOS.IDESPACIO AND ESPACIOS.ID = HABITACIONES.IDESPACIO "+ 
+		                    "AND OPERADORES.ID = ESPACIOS.IDOPERADOR AND OPERADORES.ID = "+ listaRFC10.getIdOperador() + " "+
+		                "GROUP BY CLIENTES.ID) DATOSAGRUPADOS "+
+					"WHERE CLIENTES.ID = DATOSAGRUPADOS.ID "+
+					"ORDER BY "+ listaRFC10.getOrdenamiento();	
+		}
+		
+		if(requerimiento == 11 && listaRFC10.getIdOperador() != 0)
+		{
+			sql = 	"SELECT * "+
+					"FROM CLIENTES,  (SELECT CLIENTES.ID, SUM(RESERVAS.PRECIO) AS GASTOS, COUNT(RESERVAS.ID) AS RESERVAS, "+
+		                    "AVG(RESERVAS.DURACION) AS DURACIONPROMEDIO, AVG(ESPACIOS.TAMAÑO) AS TAMAÑOPROMEDIO, "+
+		                    "STATS_MODE(OPERADORES.IDCATEGORIA) OPERADORFRECUENTE, "+
+		                    "STATS_MODE(HABITACIONES.IDCATEGORIA) HABITACIONFRECUENTE, "+
+		                    "STATS_MODE(SERVICIOS.IDCATEGORIA) AS SERVICIOFRECUENTE "+
+		                "FROM CLIENTES, RESERVAS, ESPACIOS, SERVICIOS, HABITACIONES, OPERADORES "+
+		                "WHERE CLIENTES.ID NOT IN    (SELECT DISTINCT CLIENTES.ID "+
+		                                        "FROM CLIENTES, RESERVAS "+
+		                                        "WHERE CLIENTES.ID = RESERVAS.IDCLIENTE "+ 
+		                                            "AND RESERVAS.IDESPACIO = "+ listaRFC10.getIdEspacio() + " "+
+		                                            "AND RESERVAS.FECHARESERVA <= TO_DATE('"+ listaRFC10.getFechaExterior() + "','DD-MM-YYYY') "+ 
+		                                            "AND RESERVAS.FECHARESERVA >= TO_DATE('"+ listaRFC10.getFechaInferior() + "','DD-MM-YYYY')) "+
+		                    "AND RESERVAS.IDCLIENTE = CLIENTES.ID AND RESERVAS.IDESPACIO = ESPACIOS.ID  "+ 
+		                    "AND ESPACIOS.ID = SERVICIOS.IDESPACIO AND ESPACIOS.ID = HABITACIONES.IDESPACIO "+ 
+		                    "AND OPERADORES.ID = ESPACIOS.IDOPERADOR AND OPERADORES.ID = "+ listaRFC10.getIdOperador() + " "+
+		                "GROUP BY CLIENTES.ID) DATOSAGRUPADOS "+
+					"WHERE CLIENTES.ID = DATOSAGRUPADOS.ID "+
+					"ORDER BY "+ listaRFC10.getOrdenamiento();	
+		}
+		else if(requerimiento == 11 && listaRFC10.getIdOperador() == 0)
+		{
+			sql = 	"SELECT * "+
+					"FROM CLIENTES,  (SELECT CLIENTES.ID, SUM(RESERVAS.PRECIO) AS GASTOS, COUNT(RESERVAS.ID) AS RESERVAS, "+
+		                    "AVG(RESERVAS.DURACION) AS DURACIONPROMEDIO, AVG(ESPACIOS.TAMAÑO) AS TAMAÑOPROMEDIO, "+
+		                    "STATS_MODE(OPERADORES.IDCATEGORIA) OPERADORFRECUENTE, "+
+		                    "STATS_MODE(HABITACIONES.IDCATEGORIA) HABITACIONFRECUENTE, "+
+		                    "STATS_MODE(SERVICIOS.IDCATEGORIA) AS SERVICIOFRECUENTE "+
+		                "FROM CLIENTES, RESERVAS, ESPACIOS, SERVICIOS, HABITACIONES, OPERADORES "+
+		                "WHERE CLIENTES.ID NOT IN    (SELECT DISTINCT CLIENTES.ID "+
+		                                        "FROM CLIENTES, RESERVAS "+
+		                                        "WHERE CLIENTES.ID = RESERVAS.IDCLIENTE "+ 
+		                                            "AND RESERVAS.IDESPACIO = "+ listaRFC10.getIdEspacio() + " "+
+		                                            "AND RESERVAS.FECHARESERVA <= TO_DATE('"+ listaRFC10.getFechaExterior() + "','DD-MM-YYYY') "+ 
+		                                            "AND RESERVAS.FECHARESERVA >= TO_DATE('"+ listaRFC10.getFechaInferior() + "','DD-MM-YYYY')) "+
+		                    "AND RESERVAS.IDCLIENTE = CLIENTES.ID AND RESERVAS.IDESPACIO = ESPACIOS.ID  "+ 
+		                    "AND ESPACIOS.ID = SERVICIOS.IDESPACIO AND ESPACIOS.ID = HABITACIONES.IDESPACIO "+ 
+		                    "AND OPERADORES.ID = ESPACIOS.IDOPERADOR "+
+		                "GROUP BY CLIENTES.ID) DATOSAGRUPADOS "+
+					"WHERE CLIENTES.ID = DATOSAGRUPADOS.ID "+
+					"ORDER BY "+ listaRFC10.getOrdenamiento();	
+		}
+		
+		System.out.println("SQL stmt:" + sql);
+
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		
+		long tiempo = System.currentTimeMillis();
+		
+		ResultSet rs = prepStmt.executeQuery();	
+		
+		tiempo = System.currentTimeMillis() - tiempo;
+		
+		while (rs.next()) 
+		{
+			long idCliente = Long.parseLong(rs.getString("ID"));
+			String datoSolicitado = rs.getString(listaRFC10.getEstadistica());
+			
+			resultado.add(new RFC10(idCliente, datoSolicitado));
+		}
+		
+		prepStmt.close();
+		
+		System.out.println("Esta consulta duró " + tiempo + " milisegundos");
+		
+		return resultado;
+	}
+	
+	//RFC13
+	
+	public List<RFC13> obtenerBuenosClientes() throws SQLException, Exception
+	{			
+		List<RFC13> resultado = new ArrayList<RFC13>();
+		
+		String sql = "SELECT IDCLIENTE, 1 AS RAZON "+
+				"FROM    (SELECT IDCLIENTE, COUNT(MESES) AS CONTEO "+
+				        "FROM    (SELECT DISTINCT IDCLIENTE, (EXTRACT(MONTH FROM FECHARESERVA)+ EXTRACT(YEAR FROM FECHARESERVA)*12) AS MESES "+
+				                "FROM RESERVAS) "+
+				        "GROUP BY IDCLIENTE) "+
+				"WHERE CONTEO = (SELECT EXTRACT(MONTH FROM SYSDATE) - EXTRACT(MONTH FROM MIN(FECHARESERVA)) + (EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM MIN(FECHARESERVA)))*12 "+
+				                "FROM RESERVAS) "+
+				"UNION "+
+				"SELECT TABLACONTEOTOTAL.IDCLIENTE, 2 AS RAZON "+
+				"FROM    (SELECT IDCLIENTE, COUNT(ID) AS CONTEOTOTAL "+
+				        "FROM RESERVAS "+
+				        "GROUP BY IDCLIENTE) TABLACONTEOTOTAL, "+
+				        "(SELECT IDCLIENTE, COUNT(ID) AS CONTEOCOSTOSOS "+
+				        "FROM RESERVAS "+
+				        "WHERE IDESPACIO IN (SELECT ID "+
+				                            "FROM ESPACIOS "+
+				                            "WHERE PRECIO >= 450000) "+
+				        "GROUP BY IDCLIENTE) TABLACONTEOCOSTOSOS "+
+				"WHERE TABLACONTEOTOTAL.CONTEOTOTAL = TABLACONTEOCOSTOSOS.CONTEOCOSTOSOS "+
+				        "AND TABLACONTEOTOTAL.IDCLIENTE = TABLACONTEOCOSTOSOS.IDCLIENTE "+
+				"UNION " +
+				"SELECT TABLACONTEOTOTAL.IDCLIENTE, 3 AS RAZON "+
+				"FROM    (SELECT IDCLIENTE, COUNT(ID) AS CONTEOTOTAL "+
+				        "FROM RESERVAS "+
+				        "GROUP BY IDCLIENTE) TABLACONTEOTOTAL, "+
+				        "(SELECT IDCLIENTE, COUNT(ID) AS CONTEOCOSTOSOS "+
+				        "FROM RESERVAS "+
+				        "WHERE IDESPACIO IN (SELECT DISTINCT ESPACIOS.ID "+
+				                            "FROM ESPACIOS, HABITACIONES "+
+				                            "WHERE ESPACIOS.ID = HABITACIONES.IDESPACIO "+
+				                                "AND HABITACIONES.IDCATEGORIA = 3) "+
+				        "GROUP BY IDCLIENTE) TABLACONTEOCOSTOSOS "+
+				"WHERE TABLACONTEOTOTAL.CONTEOTOTAL = TABLACONTEOCOSTOSOS.CONTEOCOSTOSOS "+
+				        "AND TABLACONTEOTOTAL.IDCLIENTE = TABLACONTEOCOSTOSOS.IDCLIENTE";		
+		
+		System.out.println("SQL stmt:" + sql);
+
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		recursos.add(prepStmt);
+		
+		long tiempo = System.currentTimeMillis();
+		
+		ResultSet rs = prepStmt.executeQuery();	
+		
+		tiempo = System.currentTimeMillis() - tiempo;
+		
+		while (rs.next()) 
+		{
+			long idCliente = Long.parseLong(rs.getString("IDCLIENTE"));
+			Cliente cliente = buscarCliente(idCliente);
+			long razon = Long.parseLong(rs.getString("RAZON"));
+			String razonS = "";
+			if (razon == 1)
+			{
+				razonS = "Cliente que hace reservas al menos una vez cada mes";
+			}
+			else if (razon == 2)
+			{
+				razonS = "Cliente que siempre reserva en alojamientos costosos";
+			}
+			else
+			{
+				razonS = "Cliente que siempre reserva suites";
+			}
+			
+			resultado.add(new RFC13(cliente,razonS));
+		}
+		
+		prepStmt.close();
+		
+		System.out.println("Esta consulta duró " + tiempo + " milisegundos");
+		
+		return resultado;
 	}
 }

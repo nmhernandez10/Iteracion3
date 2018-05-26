@@ -10,10 +10,14 @@ import java.util.Date;
 import java.util.List;
 
 import vos.CategoriaServicio;
+import vos.Cliente;
 import vos.Espacio;
+import vos.ListaRFC12;
 import vos.Operador;
 import vos.CategoriaOperador;
 import vos.RFC1;
+import vos.RFC12;
+import vos.RFC13;
 import vos.RFC3;
 import vos.RFC5;
 import vos.RFC6;
@@ -462,5 +466,115 @@ public class DAOOperador {
 			
 			return resultante;
 		}		
+	}
+	
+	// RFC12
+	
+	public List<RFC12> consultarFuncionamiento(ListaRFC12 listaRFC12) throws SQLException, Exception
+	{			
+		DAOOperador daoOperador = new DAOOperador();
+		DAOEspacio daoEspacio = new DAOEspacio();
+		
+		daoOperador.setConn(conn);
+		daoEspacio.setConn(conn);
+		
+		List<RFC12> resultado = new ArrayList<RFC12>();
+		
+		String año = String.valueOf(listaRFC12.getAño());
+		
+		String sql1 = 	"SELECT TABLACONTEO.SEMANA, TABLACONTEO.ID AS IDOPERADOR, TABLACONTEO.CONTEO "+
+						"FROM    (SELECT TABLASEMANAL.SEMANA, OPERADORES.ID, COUNT(TABLASEMANAL.ID) AS CONTEO "+
+						        "FROM    (SELECT to_char(FECHARESERVA - 7/24,'IYYY') as AÑO, to_char(FECHARESERVA - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO "+
+						                "FROM RESERVAS) TABLASEMANAL, ESPACIOS, OPERADORES "+
+						        "WHERE AÑO = 2011 AND ESPACIOS.ID = TABLASEMANAL.IDESPACIO AND OPERADORES.ID = ESPACIOS.IDOPERADOR "+
+						        "GROUP BY TABLASEMANAL.SEMANA, OPERADORES.ID) TABLACONTEO, "+
+						        "(SELECT SEMANA, MAX(CONTEO) AS MAXIMO "+
+						        "FROM    (SELECT TABLASEMANAL.SEMANA, OPERADORES.ID, COUNT(TABLASEMANAL.ID) AS CONTEO "+
+						                "FROM    (SELECT to_char(FECHARESERVA - 7/24,'IYYY') as AÑO, to_char(FECHARESERVA - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO "+
+						                        "FROM RESERVAS) TABLASEMANAL, ESPACIOS, OPERADORES "+
+						                "WHERE AÑO = " + año + " AND ESPACIOS.ID = TABLASEMANAL.IDESPACIO AND OPERADORES.ID = ESPACIOS.IDOPERADOR "+
+						                "GROUP BY TABLASEMANAL.SEMANA, OPERADORES.ID) "+
+						        "GROUP BY SEMANA) TABLAMAXIMO "+
+						"WHERE TABLACONTEO.SEMANA = TABLAMAXIMO.SEMANA AND TABLACONTEO.CONTEO = TABLAMAXIMO.MAXIMO "+
+						"ORDER BY TABLACONTEO.SEMANA";
+		
+		String sql2 = 	"SELECT TABLACONTEO.SEMANA, TABLACONTEO.ID AS IDOPERADOR, TABLACONTEO.CONTEO "+
+						"FROM    (SELECT TABLASEMANAL.SEMANA, OPERADORES.ID, COUNT(TABLASEMANAL.ID) AS CONTEO "+
+						        "FROM    (SELECT to_char(FECHARESERVA - 7/24,'IYYY') as AÑO, to_char(FECHARESERVA - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO "+
+						                "FROM RESERVAS) TABLASEMANAL, ESPACIOS, OPERADORES "+
+						        "WHERE AÑO = 2011 AND ESPACIOS.ID = TABLASEMANAL.IDESPACIO AND OPERADORES.ID = ESPACIOS.IDOPERADOR "+
+						        "GROUP BY TABLASEMANAL.SEMANA, OPERADORES.ID) TABLACONTEO, "+
+						        "(SELECT SEMANA, MIN(CONTEO) AS MINIMO "+
+						        "FROM    (SELECT TABLASEMANAL.SEMANA, OPERADORES.ID, COUNT(TABLASEMANAL.ID) AS CONTEO "+
+						                "FROM    (SELECT to_char(FECHARESERVA - 7/24,'IYYY') as AÑO, to_char(FECHARESERVA - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO "+
+						                        "FROM RESERVAS) TABLASEMANAL, ESPACIOS, OPERADORES "+
+						                "WHERE AÑO = " + año + " AND ESPACIOS.ID = TABLASEMANAL.IDESPACIO AND OPERADORES.ID = ESPACIOS.IDOPERADOR "+
+						                "GROUP BY TABLASEMANAL.SEMANA, OPERADORES.ID) "+
+						        "GROUP BY SEMANA) TABLAMINIMO "+
+						"WHERE TABLACONTEO.SEMANA = TABLAMINIMO.SEMANA AND TABLACONTEO.CONTEO = TABLAMINIMO.MINIMO "+
+						"ORDER BY TABLACONTEO.SEMANA";
+		
+		String sql3 = 	"SELECT TABLAMAXIMO.SEMANA, TABLAOCUPACION.IDESPACIO, TABLAMAXIMO.MAXIMO "+
+						"FROM    (SELECT SEMANA, MAX(OCUPACIONSEMANAL) AS MAXIMO "+
+						        "FROM    (SELECT to_char(FECHAINICIO - 7/24,'IYYY') as AÑO, to_char(FECHAINICIO - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO, CASE WHEN RESERVAS.DURACION > 8 - TO_CHAR(FECHAINICIO, 'D') THEN (8 - TO_CHAR(FECHAINICIO, 'D'))/7 ELSE RESERVAS.DURACION/7 END AS OCUPACIONSEMANAL "+
+						                "FROM RESERVAS) WHERE AÑO = " + año + " "+
+						        "GROUP BY SEMANA)TABLAMAXIMO, "+
+						        "(SELECT SEMANA, IDESPACIO, OCUPACIONSEMANAL "+
+						        "FROM(SELECT to_char(FECHAINICIO - 7/24,'IYYY') as AÑO, to_char(FECHAINICIO - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO, CASE WHEN RESERVAS.DURACION > 8 - TO_CHAR(FECHAINICIO, 'D') THEN (8 - TO_CHAR(FECHAINICIO, 'D'))/7 ELSE RESERVAS.DURACION/7 END AS OCUPACIONSEMANAL "+
+						            "FROM RESERVAS) "+
+						        "WHERE AÑO = " + año + ")TABLAOCUPACION "+
+						"WHERE TABLAMAXIMO.MAXIMO = TABLAOCUPACION.OCUPACIONSEMANAL AND TABLAMAXIMO.SEMANA = TABLAOCUPACION.SEMANA "+
+						"ORDER BY TABLAMAXIMO.SEMANA";
+		
+		String sql4 = 	"SELECT TABLAMINIMO.SEMANA, TABLAOCUPACION.IDESPACIO, TABLAMINIMO.MINIMO "+
+						"FROM    (SELECT SEMANA, MIN(OCUPACIONSEMANAL) AS MINIMO "+
+						       	"FROM    (SELECT to_char(FECHAINICIO - 7/24,'IYYY') as AÑO, to_char(FECHAINICIO - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO, CASE WHEN RESERVAS.DURACION > 8 - TO_CHAR(FECHAINICIO, 'D') THEN (8 - TO_CHAR(FECHAINICIO, 'D'))/7 ELSE RESERVAS.DURACION/7 END AS OCUPACIONSEMANAL "+
+						                "FROM RESERVAS) WHERE AÑO = " + año + " "+
+						        "GROUP BY SEMANA)TABLAMINIMO, "+
+						        "(SELECT SEMANA, IDESPACIO, OCUPACIONSEMANAL "+
+						        "FROM(SELECT to_char(FECHAINICIO - 7/24,'IYYY') as AÑO, to_char(FECHAINICIO - 7/24,'IW') as SEMANA, RESERVAS.ID, RESERVAS.IDESPACIO, CASE WHEN RESERVAS.DURACION > 8 - TO_CHAR(FECHAINICIO, 'D') THEN (8 - TO_CHAR(FECHAINICIO, 'D'))/7 ELSE RESERVAS.DURACION/7 END AS OCUPACIONSEMANAL "+
+						            "FROM RESERVAS) "+
+						        "WHERE AÑO = " + año + ")TABLAOCUPACION "+
+						"WHERE TABLAMINIMO.MINIMO = TABLAOCUPACION.OCUPACIONSEMANAL AND TABLAMINIMO.SEMANA = TABLAOCUPACION.SEMANA "+
+						"ORDER BY TABLAMINIMO.SEMANA";
+		
+		String sql = "SELECT SEMANA, MIN(OPERADORMAS) AS OPERADORMAS, MIN(OPERADORMENOS) AS OPERADORMENOS, MIN(ESPACIOMAS) AS ESPACIOMAS, MIN(ESPACIOMENOS) AS ESPACIOMENOS "+
+			         "FROM(SELECT T1.SEMANA, T1.IDOPERADOR AS OPERADORMAS, T2.IDOPERADOR AS OPERADORMENOS, T3.IDESPACIO AS ESPACIOMAS, T4.IDESPACIO AS ESPACIOMENOS "+
+			    	    "FROM ("+sql1+")T1,("+sql2+")T2,("+sql3+")T3,("+sql4+")T4 "+
+			    	 "WHERE T1.SEMANA = T2.SEMANA AND T2.SEMANA = T3.SEMANA AND T3.SEMANA = T4.SEMANA) "+
+			         "GROUP BY SEMANA "+
+			         "ORDER BY SEMANA";
+		
+		System.out.println("SQL stmt:" + sql);
+
+		PreparedStatement prepStmt = conn.prepareStatement(sql);
+		
+		recursos.add(prepStmt);
+		
+		long tiempo = System.currentTimeMillis();
+		
+		ResultSet rs = prepStmt.executeQuery();	
+		
+		tiempo = System.currentTimeMillis() - tiempo;
+		
+		
+		
+		while(rs.next())
+		{
+			int semana = rs.getInt("SEMANA");
+			
+			Operador operadorMas = daoOperador.buscarOperador(rs.getLong("OPERADORMAS"));
+			Operador operadorMenos = daoOperador.buscarOperador(rs.getLong("OPERADORMENOS"));
+			Espacio espacioMas = daoEspacio.buscarEspacio(rs.getLong("ESPACIOMAS"));
+			Espacio espacioMenos =daoEspacio.buscarEspacio(rs.getLong("ESPACIOMENOS"));
+			
+			resultado.add(new RFC12(semana, operadorMas, operadorMenos, espacioMas, espacioMenos));
+		}
+		
+		prepStmt.close();
+		
+		System.out.println("Esta consulta duró " + tiempo + " milisegundos");
+		
+		return resultado;
 	}
 }
